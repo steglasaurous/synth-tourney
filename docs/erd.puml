@@ -1,0 +1,109 @@
+@startuml
+    entity Map {
+        * id : int <<generated>>
+        * map_id : varchar
+        * title : varchar
+        * artist : varchar
+        * mapper : varchar
+    }
+
+    entity Tournament {
+        * id : int <<generated>>
+        * state : enum<stopped|running|paused|done>
+        * tournament_type : int <<FK>>
+        * max_songs : int
+        * stop_recording_after_max : bool
+    }
+
+    entity TournamentType {
+        * id : int <<generated>>
+        * name : varchar
+    }
+
+    entity PlayInstance {
+        * id : int <<generated>>
+        * map_id : int <<FK>>
+        * timestamp : timestamp
+        * tournament_id : int <<FK>>
+    }
+
+    entity ScoreSubmission {
+        * id : int <<generated>>
+        * submitter : varchar
+        * submitted_on : timestamp
+        * play_instance_id : int <<FK>>
+    }
+
+    entity Score {
+        * id : int <<generated>>
+        * score_submission_id : int <<FK>>
+        * player_name : varchar
+        * score : int
+        * total_notes : int
+        * total_notes_hit : int
+        * perfect_hits : int
+        * good_hits : int
+        * poor_hits : int
+        * longest_streak : int
+        * max_multiplier : int
+        * specials_hit : int
+        * specials_total : int
+    }
+
+    Score }|-- ScoreSubmission
+    ScoreSubmission }|-- PlayInstance
+    PlayInstance }|-- Map
+    PlayInstance }|-- Tournament
+    Tournament }|-- TournamentType
+
+@enduml
+
+@startuml
+    entity SynthMap {
+        * id : int <<generated>>
+        * map_id : varchar
+        * title : varchar
+        * artist : varchar
+        * mapper : varchar
+    }
+
+    entity PlayInstance {
+        * id : int <<generated>>
+        * map_id : int <<FK>>
+        * timestamp : timestamp
+        room_id : string
+    }
+
+    note right of PlayInstance::room_id
+        Unique multiplayer room id, if available
+        so multiple submissions can be aggregated
+    endnote
+
+    entity ScoreSubmission {
+        * id : int <<generated>>
+        * submitter : varchar
+        * submitted_on : timestamp
+        * play_instance_id : int <<FK>>
+    }
+
+    entity Score {
+        * id : int <<generated>>
+        * score_submission_id : int <<FK>>
+        * player_name : varchar
+        * score : int
+        * total_notes : int
+        * total_notes_hit : int
+        * perfect_hits : int
+        * good_hits : int
+        * poor_hits : int
+        * longest_streak : int
+        * max_multiplier : int
+        * specials_hit : int
+        * specials_total : int
+    }
+
+    Score }|-- ScoreSubmission
+    ScoreSubmission }|-- PlayInstance
+    PlayInstance }|-- SynthMap
+
+@enduml
