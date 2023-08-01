@@ -1,21 +1,30 @@
-import {Column, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn} from "typeorm";
-import {SynthMap} from "./synth-map.entity";
-import {ScoreSubmission} from "./score-submission.entity";
+import {
+  Column,
+  Entity,
+  ManyToOne,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { SynthMap } from './synth-map.entity';
+import { ScoreSubmission } from './score-submission.entity';
 
 @Entity()
 export class PlayInstance {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @ManyToOne(() => SynthMap, synthMap => synthMap.playInstances)
-    synthMap: SynthMap;
+  @ManyToOne(() => SynthMap, (synthMap) => synthMap.playInstances)
+  synthMap: SynthMap;
 
-    @Column()
-    timestamp: number;
+  @Column()
+  timestamp: number;
 
-    @Column({ nullable: true })
-    roomId: string;
+  @Column({ nullable: true })
+  roomName: string;
 
-    @OneToMany(() => ScoreSubmission, scoreSubmission => scoreSubmission.playInstance)
-    scoreSubmissions: ScoreSubmission[];
+  @OneToMany(
+    () => ScoreSubmission,
+    (scoreSubmission) => scoreSubmission.playInstance,
+  )
+  scoreSubmissions: ScoreSubmission[];
 }

@@ -1,27 +1,34 @@
 import { Injectable } from '@nestjs/common';
-import { CreateScoreSubmissionDto} from './dto/create-score-submission.dto';
-import {InjectRepository} from "@nestjs/typeorm";
-import {SynthMap} from "./entities/synth-map.entity";
-import {Repository} from "typeorm";
-import {PlayInstance} from "./entities/play-instance.entity";
-import {ScoreSubmission} from "./entities/score-submission.entity";
-import {Score} from "./entities/score.entity";
+import { CreateScoreSubmissionDto } from './dto/create-score-submission.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { SynthMap } from './entities/synth-map.entity';
+import { Repository } from 'typeorm';
+import { PlayInstance } from './entities/play-instance.entity';
+import { ScoreSubmission } from './entities/score-submission.entity';
+import { Score } from './entities/score.entity';
 import * as crypto from 'node:crypto';
 
 @Injectable()
 export class ScoreSubmissionService {
   constructor(
-      @InjectRepository(SynthMap) private synthMapRepository: Repository<SynthMap>,
-      @InjectRepository(PlayInstance) private playInstanceRepository: Repository<PlayInstance>,
-      @InjectRepository(ScoreSubmission) private scoreSubmissionRepository: Repository<ScoreSubmission>,
-      @InjectRepository(Score) private scoreRepository: Repository<Score>
-  ) {
-  }
-  async create(createScoreSubmissionDto: CreateScoreSubmissionDto): Promise<void> {
+    @InjectRepository(SynthMap)
+    private synthMapRepository: Repository<SynthMap>,
+    @InjectRepository(PlayInstance)
+    private playInstanceRepository: Repository<PlayInstance>,
+    @InjectRepository(ScoreSubmission)
+    private scoreSubmissionRepository: Repository<ScoreSubmission>,
+    @InjectRepository(Score) private scoreRepository: Repository<Score>,
+  ) {}
+  async create(
+    createScoreSubmissionDto: CreateScoreSubmissionDto,
+  ): Promise<void> {
     // See if we have a matching map entry or not.  If not, add it.
     // Generate a hash on the input and search for that?
 
-    const mapHash = crypto.createHash('sha256').update(JSON.stringify(createScoreSubmissionDto.map)).digest('hex');
+    const mapHash = crypto
+      .createHash('sha256')
+      .update(JSON.stringify(createScoreSubmissionDto.map))
+      .digest('hex');
     let synthMap = await this.synthMapRepository.findOneBy({ hash: mapHash });
     if (!synthMap) {
       synthMap = new SynthMap();
@@ -40,26 +47,30 @@ export class ScoreSubmissionService {
     // Thinking a hash of all the player names in the room until I figure out
     // how to uniquely identify a MP room.
 
-    const playerNames = createScoreSubmissionDto.scores.map((score) => {
-      return score.playerName;
-    }).sort((n1, n2) => {
-      if (n1 > n2) {
-        return 1;
-      }
-      if (n1 < n1) {
-        return -1;
-      }
+    // const playerNames = createScoreSubmissionDto.scores
+    //   .map((score) => {
+    //     return score.playerName;
+    //   })
+    //   .sort((n1, n2) => {
+    //     if (n1 > n2) {
+    //       return 1;
+    //     }
+    //     if (n1 < n1) {
+    //       return -1;
+    //     }
+    //
+    //     return 0;
+    //   });
 
-      return 0;
-    });
-
-    const roomIdHash = crypto.createHash('sha256').update(playerNames.join('')).digest('hex');
+    // const roomIdHash = crypto.createHash('sha256').update(playerNames.join('')).digest('hex');
     let playInstance = await this.playInstanceRepository.findOneBy({
-      roomId: roomIdHash
+      roomName: createScoreSubmissionDto.roomName,
+      synthMap: synthMap,
     });
+
     if (!playInstance) {
       playInstance = new PlayInstance();
-      playInstance.roomId = roomIdHash;
+      playInstance.roomName = createScoreSubmissionDto.roomName;
       playInstance.synthMap = synthMap;
       playInstance.timestamp = Date.now();
       await this.playInstanceRepository.save(playInstance);
@@ -72,8 +83,8 @@ export class ScoreSubmissionService {
 
     await this.scoreSubmissionRepository.save(scoreSubmission);
 
-    for (let incomingScore of createScoreSubmissionDto.scores.values()) {
-      let score = new Score();
+    for (const incomingScore of createScoreSubmissionDto.scores.values()) {
+      const score = new Score();
       score.scoreSubmission = scoreSubmission;
       score.score = incomingScore.score;
       score.maxMultiplier = incomingScore.maxMultiplier;
