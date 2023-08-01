@@ -7,6 +7,8 @@ import { PlayInstance } from './entities/play-instance.entity';
 import { ScoreSubmission } from './entities/score-submission.entity';
 import { Score } from './entities/score.entity';
 import * as crypto from 'node:crypto';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { ScoreSubmittedEvent } from './score-submitted.event';
 
 @Injectable()
 export class ScoreSubmissionService {
@@ -18,6 +20,7 @@ export class ScoreSubmissionService {
     @InjectRepository(ScoreSubmission)
     private scoreSubmissionRepository: Repository<ScoreSubmission>,
     @InjectRepository(Score) private scoreRepository: Repository<Score>,
+    private eventEmitter: EventEmitter2,
   ) {}
   async create(
     createScoreSubmissionDto: CreateScoreSubmissionDto,
@@ -82,6 +85,7 @@ export class ScoreSubmissionService {
     scoreSubmission.submitter = createScoreSubmissionDto.submitterName;
 
     await this.scoreSubmissionRepository.save(scoreSubmission);
+    const scores = [];
 
     for (const incomingScore of createScoreSubmissionDto.scores.values()) {
       const score = new Score();
@@ -96,7 +100,14 @@ export class ScoreSubmissionService {
       score.playerName = incomingScore.playerName;
 
       await this.scoreRepository.save(score);
+
+      scores.push(score);
     }
+
+    this.eventEmitter.emitAsync(
+      ScoreSubmittedEvent.name,
+      new ScoreSubmittedEvent(scores),
+    );
 
     // Everything is saved successfully.
     return;

@@ -1,0 +1,107 @@
+@startuml
+    class Game_InfoProvider {
+        .. Get static instance ..
+        Game_InfoProvider s_instance
+        .. Current song info ..
+        +string ArtworkBytes
+        +UnityEngine.Texture2D Cover
+        +string Author
+        +string BeatMapper
+        +string Chart
+        +string CustomDiffName
+        +float CustomDiffSpeed
+        +string FilePath
+        +bool IsCustomSong
+        +string LastPlayHash
+        +int MaxCombo
+        +int MaxMultiplier
+        +string SongBPM
+        +float SongBPMFloat
+        +string SongDifficulty
+        +string SongDuration
+        +string TrackName
+        .. Scoring ..
+        +int CurrentScore
+        +int HighScore
+        +string LeaderboardName
+        +string LeaderboardHash
+        +int SpecialsCompleted
+        +int SpecialTotals
+
+        .. Current Stage ..
+        +bool IsCustomStage
+
+        .. Modifier settings ..
+        +int CurrentSpiralIntensity
+        +int CurrentSpiralStage
+        +int CurrentSpinStage
+        +int SpeedLevel
+        int SuddenDeath
+
+        bool HoloMode
+        bool PracticeMode
+        .. Multiplayer ..
+        +SynthSessionPlayer[] SessionPlayers
+        +OnJoinedRoom() : void
+        +OnLeftRoom() : void
+        +OnJoinedLobby() : void
+        +OnLeftLobby() : void
+        +OnEvent(EventData photonEvent) : void
+        .. Streamer Related ..
+        string TwitchUserName
+        string TwitchChannel
+        .. Possibly interesting ..
+        +List<string> PlayedCurrentSession
+        +UserSongStats SongStats
+        +List<string> SongTags
+        UpdateSongStat(string scoreID, ScoreUser score, float perfect, float good, float poor, float force, string songName, string oldID, string artist) : void
+        UpdateStageStat(string stageId) : void
+        +SynthSessionPlayer CurrentSessionPlayer
+        CurrentPlayTimeSTR() : System.Text.StringBuilder
+
+    }
+
+    note right of Game_InfoProvider::Chart
+        Not sure what this is?  a map identifier maybe?
+    endnote
+
+
+    package Synth.Versus {
+        class Client {}
+
+    }
+
+    package Util.Controller {
+        class MultiplayerRoomController {
+
+        }
+    }
+
+    package Synth.Data {
+        class MultiplayerRoomProvider {
+            +int CurrentRoomIndex
+            +List<RoomInfo> RoomsList
+        }
+    }
+
+    package Photon.Realtime {
+        class Room {
+
+        }
+
+        class RoomInfo {
+
+        }
+
+        Room --> RoomInfo: extends
+    }
+
+    package Photon.Pun {
+        class PhotonNetwork {
+            +RoomInfo CurrentRoom
+        }
+
+        PhotonNetwork <.. Room : returns
+    }
+
+@enduml

@@ -1,0 +1,17 @@
+@startuml
+    class ScoreSubmittedEvent {
+        +playInstance: PlayInstance
+        +scoreSubmission: ScoreSubmission
+        +scores: Score[]
+    }
+
+
+    package GoogleSheetsUpdater {
+        class GoogleSheetsAuthenticator {
+            -string[] scopes
+            +constructor()
+            +load() : Promise<void>
+        }
+    }
+
+@enduml

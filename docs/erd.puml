@@ -1,4 +1,19 @@
-@startuml
+@startuml Future state
+    entity User {
+        * id : int <<generated>>
+    }
+
+    entity UserAuth {
+        * user_auth_source_id : int <<FK>>
+        * user_id : int <<FK>>
+        * auth_info : text
+    }
+
+    entity UserAuthSource {
+        * id : int <<generated>>
+        * name : varchar
+    }
+
     entity Map {
         * id : int <<generated>>
         * map_id : varchar
@@ -13,6 +28,7 @@
         * tournament_type : int <<FK>>
         * max_songs : int
         * stop_recording_after_max : bool
+        * user_id : int <<FK>>
     }
 
     entity TournamentType {
@@ -23,13 +39,14 @@
     entity PlayInstance {
         * id : int <<generated>>
         * map_id : int <<FK>>
+        * room_name : string
         * timestamp : timestamp
         * tournament_id : int <<FK>>
     }
 
     entity ScoreSubmission {
         * id : int <<generated>>
-        * submitter : varchar
+        * user_id : int <<FK>>
         * submitted_on : timestamp
         * play_instance_id : int <<FK>>
     }
@@ -50,15 +67,20 @@
         * specials_total : int
     }
 
+    UserAuthSource }|-- UserAuth
+    User }|-- UserAuth
+
     Score }|-- ScoreSubmission
     ScoreSubmission }|-- PlayInstance
+    ScoreSubmission }|-- User
     PlayInstance }|-- Map
     PlayInstance }|-- Tournament
     Tournament }|-- TournamentType
+    Tournament }|-- User
 
 @enduml
 
-@startuml
+@startuml Initial MVP
     entity SynthMap {
         * id : int <<generated>>
         * map_id : varchar
