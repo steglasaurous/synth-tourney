@@ -1,8 +1,10 @@
 @startuml
-    class ScoreSubmittedEvent {
-        +playInstance: PlayInstance
-        +scoreSubmission: ScoreSubmission
-        +scores: Score[]
+    package ScoreSubmissionModule {
+        class ScoreSubmittedEvent {
+            +playInstance: PlayInstance
+            +scoreSubmission: ScoreSubmission
+            +scores: Score[]
+        }
     }
 
 

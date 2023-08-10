@@ -6,9 +6,9 @@ import * as fs from 'fs';
 
 export class GoogleSheetUpdaterListener {
   // FIXME: Move this into database at some point, once users and such get worked out.
-  private spreadsheetId = '1W6P0TsH96SaqpFLWlHu9x466rQeL6TojnjJwOlx24cY';
+  private spreadsheetId = '1pCTNCszDH0XleIwhXriRO97edPbsM4SqoemhSeZjoQc';
   private spreadsheetRawScoresTab = "'Example 1 - Raw Score Results'";
-  private spreadsheetPlacementsTab = "'Template'";
+  private spreadsheetPlacementsTab = 'Template';
   private logger: Logger = new Logger(GoogleSheetUpdaterListener.name);
   private googleAuth;
   private sheetsService;
@@ -37,12 +37,24 @@ export class GoogleSheetUpdaterListener {
       }
     });
 
+    // Find out who got highest accuracy
+    // FIXME: Change to allow multiple winners of highest accuracy (up to 3)
+    let highestAccuracyPlayerName;
+    let highestAccuracyScore = 0;
+    sortedScores.forEach((score) => {
+      if (score.perfectHits > highestAccuracyScore) {
+        highestAccuracyPlayerName = score.playerName;
+        highestAccuracyScore = score.perfectHits;
+      }
+    });
+
     const rawData = [];
     const placements = [];
-
+    let winnerPushed = false;
     sortedScores.forEach((score) => {
       placements.push(score.playerName);
       rawData.push([
+        scoreSubmittedEvent.synthMap.title,
         score.playerName,
         score.score,
         score.perfectHits,
@@ -51,15 +63,37 @@ export class GoogleSheetUpdaterListener {
         score.maxMultiplier,
         score.longestStreak,
         score.specialsHit,
+        score.playerName == highestAccuracyPlayerName,
+        winnerPushed == false,
       ]);
+      winnerPushed = true;
     });
 
-    await this.appendScores(
-      [placements],
-      this.spreadsheetPlacementsTab + '!C3:C16',
-      'COLUMNS',
-    );
+    // Find out the next value available in the spreadsheet.
+    const currentContent = await this.sheetsService.spreadsheets.values.get({
+      spreadsheetId: this.spreadsheetId,
+      auth: this.googleAuth,
+      range: this.spreadsheetPlacementsTab + '!C3:AF3',
+    });
+    // C == 67
+    // String.fromCharCode(67)
+    let targetColumnName;
+    if (!currentContent.data.values) {
+      // No data, start at 'C';
+      targetColumnName = 'C';
+    } else if (currentContent.data.values[0].length > 24) {
+      targetColumnName = String.fromCharCode(
+        65 + currentContent.data.values[0].length - 24,
+      );
+    } else {
+      targetColumnName = String.fromCharCode(
+        67 + currentContent.data.values[0].length,
+      );
+    }
 
+    const targetRange = `${this.spreadsheetPlacementsTab}!${targetColumnName}3`;
+
+    await this.appendScores([placements], targetRange, 'COLUMNS');
     await this.appendScores(rawData, this.spreadsheetRawScoresTab);
   }
 

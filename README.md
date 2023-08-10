@@ -14,3 +14,7 @@ In short, see the scripts in package.json for the typeorm migration commands.
 
 - Make sure to add new entities and migrations to the list in src/typeorm.config.ts
 
+# Todo list
+
+- [ ] Update google sheet listener to have sheet name and tab names to be configurable
+- [ ] Think about how google sheets can fit into the broader picture

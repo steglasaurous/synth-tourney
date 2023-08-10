@@ -106,7 +106,7 @@ export class ScoreSubmissionService {
 
     this.eventEmitter.emitAsync(
       ScoreSubmittedEvent.name,
-      new ScoreSubmittedEvent(scores),
+      new ScoreSubmittedEvent(synthMap, playInstance, scoreSubmission, scores),
     );
 
     // Everything is saved successfully.
