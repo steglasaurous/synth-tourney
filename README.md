@@ -6,6 +6,13 @@ npm run typeorm:run-migrations # Creates the database - currently sqlite
 npm run start # Starts the server
 ```
 
+# Starting in Docker
+
+```
+docker build . -t synth-tourney
+docker run -e VIRTUAL_HOST=scores.steglasaurous.com synth-tourney # Used in conjunction with nginxproxy/nginx-proxy
+```
+
 # Working with TypeORM migrations
 
 I setup typeORM migrations as per: https://wanago.io/2022/07/25/api-nestjs-database-migrations-typeorm/
