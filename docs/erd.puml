@@ -4,9 +4,9 @@
     }
 
     entity UserAuth {
-        * user_auth_source_id : int <<FK>>
-        * user_id : int <<FK>>
-        * auth_info : text
+        * userAuthSourceId : int <<FK>>
+        * userId : int <<FK>>
+        * authInfo : json
     }
 
     entity UserAuthSource {
@@ -14,57 +14,69 @@
         * name : varchar
     }
 
-    entity Map {
+    entity SynthMap {
         * id : int <<generated>>
-        * map_id : varchar
         * title : varchar
         * artist : varchar
         * mapper : varchar
+        * difficulty : varchar
+        * totalNotes : int
+        * totalSpecials : int
+        * hash : varchar
     }
 
     entity Tournament {
         * id : int <<generated>>
         * state : enum<stopped|running|paused|done>
-        * tournament_type : int <<FK>>
-        * max_songs : int
-        * stop_recording_after_max : bool
-        * user_id : int <<FK>>
+        * tournamentType : int <<FK>>
+        * maxSongs : int
+        * stopRecordingAfterMax : bool
+        * userId : int <<FK>>
     }
 
     entity TournamentType {
         * id : int <<generated>>
         * name : varchar
+        * displayName : varchar
+    }
+
+    entity TournamentRound {
+        * id : int <<generated>>
+        * tournamentId : int <<FK>>
+        * roundName : varchar
+        * isActive : bool
     }
 
     entity PlayInstance {
         * id : int <<generated>>
-        * map_id : int <<FK>>
-        * room_name : string
+        * synthMapId : int <<FK>>
+        * roomName : string
         * timestamp : timestamp
-        * tournament_id : int <<FK>>
+        * tournamentId : int <<FK>>
     }
 
     entity ScoreSubmission {
         * id : int <<generated>>
-        * user_id : int <<FK>>
-        * submitted_on : timestamp
-        * play_instance_id : int <<FK>>
+        * userId : int <<FK>>
+        * submitterPlayerName : varchar
+        * submittedOn : timestamp
+        * playInstanceId : int <<FK>>
     }
 
     entity Score {
         * id : int <<generated>>
-        * score_submission_id : int <<FK>>
-        * player_name : varchar
+        * scoreSubmissionId : int <<FK>>
+        * playerName : varchar
         * score : int
-        * total_notes : int
-        * total_notes_hit : int
-        * perfect_hits : int
-        * good_hits : int
-        * poor_hits : int
-        * longest_streak : int
-        * max_multiplier : int
-        * specials_hit : int
-        * specials_total : int
+        * totalNotes : int
+        * totalNotesHit : int
+        * perfectHits : int
+        * goodHits : int
+        * poorHits : int
+        * longestStreak : int
+        * maxMultiplier : int
+        * specialsHit : int
+        * specialsTotal : int
     }
 
     UserAuthSource }|-- UserAuth
@@ -73,10 +85,11 @@
     Score }|-- ScoreSubmission
     ScoreSubmission }|-- PlayInstance
     ScoreSubmission }|-- User
-    PlayInstance }|-- Map
+    PlayInstance }|-- SynthMap
     PlayInstance }|-- Tournament
     Tournament }|-- TournamentType
     Tournament }|-- User
+    Tournament --|{ TournamentRound
 
 @enduml
 

@@ -17,4 +17,7 @@ In short, see the scripts in package.json for the typeorm migration commands.
 # Todo list
 
 - [ ] Update google sheet listener to have sheet name and tab names to be configurable
+- [ ] Add condition to only push one submission to google sheet per play instance
+- [ ] Update spreadsheet listener to match new spreadsheet layout
+- [ ] 
 - [ ] Think about how google sheets can fit into the broader picture

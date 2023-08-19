@@ -1,35 +1,32 @@
-import {Column, Entity, OneToMany, PrimaryGeneratedColumn} from "typeorm";
-import {PlayInstance} from "./play-instance.entity";
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { PlayInstance } from './play-instance.entity';
 
 @Entity()
 export class SynthMap {
-    @PrimaryGeneratedColumn()
-    id: number;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column({ default: '' })
-    map_id: string;
+  @Column()
+  title: string;
 
-    @Column()
-    title: string;
+  @Column()
+  artist: string;
 
-    @Column()
-    artist: string;
+  @Column()
+  mapper: string;
 
-    @Column()
-    mapper: string;
+  @Column()
+  difficulty: string;
 
-    @Column()
-    difficulty: string;
+  @Column()
+  totalNotes: number;
 
-    @Column()
-    totalNotes: number;
+  @Column()
+  totalSpecials: number;
 
-    @Column()
-    totalSpecials: number;
+  @Column({ unique: true })
+  hash: string;
 
-    @Column({unique: true})
-    hash: string;
-
-    @OneToMany(() => PlayInstance, (playInstance) => playInstance.synthMap)
-    playInstances: PlayInstance[]
+  @OneToMany(() => PlayInstance, (playInstance) => playInstance.synthMap)
+  playInstances: PlayInstance[];
 }
