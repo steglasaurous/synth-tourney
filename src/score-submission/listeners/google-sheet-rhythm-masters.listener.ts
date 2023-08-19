@@ -10,11 +10,12 @@ export class GoogleSheetRhythmMastersListener {
   private spreadsheetRawScoresTab = "'Raw'";
   private spreadsheetPlacementsTab = "'Week2'";
   private playerNameRange = 'A9:A20';
-  private placementsRange = 'B9:B20';
+  private placementsRange = 'B9:W20';
   private logger: Logger = new Logger(GoogleSheetRhythmMastersListener.name);
   private googleAuth;
   private sheetsService;
 
+  private submittedPlayInstances: number[] = [];
   constructor() {
     const creds = JSON.parse(fs.readFileSync('credentials.json').toString());
 
@@ -29,17 +30,38 @@ export class GoogleSheetRhythmMastersListener {
 
   @OnEvent(ScoreSubmittedEvent.name)
   async handle(scoreSubmittedEvent: ScoreSubmittedEvent) {
-    // FIXME: Handle submitting scores to spreadsheet only once per play instance.
-    // Get list of player names in the playername column so we know what row a player's on.
-    // Do we need to have a lookup in case the in-game player name doesn't match what's in the spreadsheet?
-    const playerListResponse = await this.sheetsService.spreadsheets.values.get({
-      spreadsheetId: this.spreadsheetId,
-      auth: this.googleAuth,
-      range: this.spreadsheetPlacementsTab + '!' + this.playerNameRange,
-      majorDimension: 'COLUMNS'
+    // Check the play instance cache.  If we've already written to the spreadsheet for this instance, don't do anything.
+    if (
+      this.submittedPlayInstances.includes(scoreSubmittedEvent.playInstance.id)
+    ) {
+      this.logger.log('Already submitted for play instance', {
+        playInstanceId: scoreSubmittedEvent.playInstance.id,
+        synthMap: scoreSubmittedEvent.synthMap.title,
+      });
+      return;
+    }
+
+    // Update right away so if another submitter submits scores, we can catch it and not double up.
+    this.submittedPlayInstances.push(scoreSubmittedEvent.playInstance.id);
+
+    this.logger.log('Submitting scores', {
+      playInstanceId: scoreSubmittedEvent.playInstance.id,
+      synthMap: scoreSubmittedEvent.synthMap.title,
     });
 
+    // Get list of player names in the playername column so we know what row a player's on.
+    // Do we need to have a lookup in case the in-game player name doesn't match what's in the spreadsheet?
+    const playerListResponse = await this.sheetsService.spreadsheets.values.get(
+      {
+        spreadsheetId: this.spreadsheetId,
+        auth: this.googleAuth,
+        range: this.spreadsheetPlacementsTab + '!' + this.playerNameRange,
+        majorDimension: 'COLUMNS',
+      },
+    );
+
     const playerList: any[] = playerListResponse.data.values;
+    this.logger.debug('Current playerlist', { playerList: playerList });
 
     // Iterate through the scores and fill in the values at the appropriate locations
     // If a player name doesn't exist, add it.
@@ -60,42 +82,38 @@ export class GoogleSheetRhythmMastersListener {
       }
     });
 
-    const playerListUpdateResource = {
-      playerList,
-    };
+    // Clean the array so we put empty strings for any non-existent scores.
+    for (let i = 0; i < scoresOutput.length; i++) {
+      if (!scoresOutput[i]) {
+        scoresOutput[i] = '';
+      }
+    }
+    this.logger.debug('Updated player list', { playerList: playerList });
 
-    // Update playerList
-    const updatePlayerListResult = await this.sheetsService.values.update({
-      spreadsheetId: this.spreadsheetId,
-      auth: this.googleAuth,
-      range: this.spreadsheetPlacementsTab + '!' + this.playerNameRange,
+    const playerListUpdateResource = {
+      values: playerList,
       majorDimension: 'COLUMNS',
-      valueInputOption: 'RAW',
-      requestBody: playerListUpdateResource,
-    });
+    };
+    // Update playerList
+    const updatePlayerListResult =
+      await this.sheetsService.spreadsheets.values.update({
+        spreadsheetId: this.spreadsheetId,
+        auth: this.googleAuth,
+        range: `${this.spreadsheetPlacementsTab}!${this.playerNameRange}`,
+        valueInputOption: 'RAW',
+        requestBody: playerListUpdateResource,
+      });
+    this.logger.debug('Player list written to sheet');
 
     // Submit scores to next available set of columns.
-    await this.appendScores(scoresOutput, `${this.spreadsheetPlacementsTab}!${this.placementsRange}`, 'COLUMNS');
-
-    /*
-    Players list should be:
-
-    [
-      [
-        'player1',
-        'player2',
-      ]
-    ]
-
-    Scores should be lined up with player names.
-    [
-      [
-        '1728131', // Player one's score
-        '1238217', // Player two's score
-      ]
-    ]
-     */
-
+    const targetRange = await this.getNextAvailableRange(
+      `${this.spreadsheetPlacementsTab}!${this.placementsRange}`,
+    );
+    this.logger.debug('Appending scores', {
+      scores: scoresOutput,
+      targetRange: targetRange,
+    });
+    await this.appendScores([scoresOutput], targetRange, 'COLUMNS');
 
     // Do raw scores
     const sortedScores = scoreSubmittedEvent.scores.sort((a, b) => {
@@ -112,6 +130,7 @@ export class GoogleSheetRhythmMastersListener {
 
     sortedScores.forEach((score) => {
       rawData.push([
+        scoreSubmittedEvent.synthMap.title,
         score.playerName,
         score.score,
         score.perfectHits,
@@ -122,8 +141,10 @@ export class GoogleSheetRhythmMastersListener {
         score.specialsHit,
       ]);
     });
-
+    this.logger.debug('Appending raw score data', { rawData: rawData });
     await this.appendScores(rawData, this.spreadsheetRawScoresTab);
+
+    this.logger.log('Spreadsheet update complete');
   }
 
   private async appendScores(values, range, majorDimension = 'ROWS') {
@@ -144,5 +165,32 @@ export class GoogleSheetRhythmMastersListener {
     } catch (err) {
       throw err;
     }
+  }
+
+  private async getNextAvailableRange(range) {
+    const currentContent = await this.sheetsService.spreadsheets.values.get({
+      spreadsheetId: this.spreadsheetId,
+      auth: this.googleAuth,
+      range: range,
+      majorDimension: 'COLUMNS',
+    });
+    const startColumn: number = range.split('!')[1].split(':')[0].charCodeAt(0);
+    const startRow: number = range.split('!')[1].split(':')[0][1];
+
+    let targetColumnName: string;
+    if (!currentContent.data.values) {
+      console.log('No data in current content');
+      targetColumnName = String.fromCharCode(startColumn);
+    } else if (startColumn + currentContent.data.values.length > 90) {
+      targetColumnName = String.fromCharCode(
+        startColumn + currentContent.data.values.length - 64,
+      );
+    } else {
+      targetColumnName = String.fromCharCode(
+        startColumn + currentContent.data.values.length,
+      );
+    }
+
+    return `${this.spreadsheetPlacementsTab}!${targetColumnName}${startRow}`;
   }
 }
