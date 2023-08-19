@@ -6,5 +6,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get -y update && apt-get -y upgrade && apt-get install -y gettext-base dos2unix
 
 COPY . /server
+RUN cd /server && npm ci && npm run typeorm:run-migrations
+COPY run.sh /run.sh
 EXPOSE 3000
 CMD ["/bin/bash", "/run.sh"]
