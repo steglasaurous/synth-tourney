@@ -31,7 +31,12 @@
         * tournamentType : int <<FK>>
         * maxSongs : int
         * stopRecordingAfterMax : bool
+    }
+
+    entity UserHasTournament {
         * userId : int <<FK>>
+        * tournamentId : int <<FK>>
+        * isOwner : bool
     }
 
     entity TournamentType {
@@ -88,7 +93,9 @@
     PlayInstance }|-- SynthMap
     PlayInstance }|-- Tournament
     Tournament }|-- TournamentType
-    Tournament }|-- User
+'    Tournament }|-- User
+    Tournament }|-- UserHasTournament
+    User }|-- UserHasTournament
     Tournament --|{ TournamentRound
 
 @enduml

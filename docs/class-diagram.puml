@@ -1,18 +1,118 @@
 @startuml
     package ScoreSubmissionModule {
+        class ScoreSubmissionController {
+            -scoreSubmissionService: ScoreSubmissionService
+            +create(createScoreSubmissionDto: CreateScoreSubmissionDto)
+        }
+
+        class ScoreSubmissionService {
+            -synthMapRepository: Repository<SynthMap>
+            -playInstanceRepository: Repository<PlayInstance>
+            -scoreSubmissionRepository: Repository<ScoreSubmission>
+            -scoreRepository: Repository<Score>
+            -eventEmitter: EventEmitter2
+            +constructor()
+            +create(createScoreSubmissionDto: CreateScoreSubmissionDto): Promise<void>
+        }
+        ScoreSubmissionService <.. ScoreSubmissionController: uses
         class ScoreSubmittedEvent {
             +playInstance: PlayInstance
             +scoreSubmission: ScoreSubmission
             +scores: Score[]
         }
-    }
+
+        package Dto {
+            class CreateScoreSubmissionDto {
+            }
+            CreateScoreSubmissionDto <.. ScoreSubmissionService: consumes
+            CreateScoreSubmissionDto <.. ScoreSubmissionController: uses
+        }
+
+        package Entities {
+            class Score
+            {
+                +id: number
+                +scoreSubmission: ScoreSubmission
+                +playerName: string
+                +score: number
+                +perfectHits: number
+                +goodHits: number
+                +poorHits: number
+                +longestStreak: number
+                +maxMultiplier: number
+                +specialsHit: number
+            }
+
+            class PlayInstance {
+                +id: number
+                +synthMap: SynthMap
+                +timestamp: number
+                +roomName: string
+                +scoreSubmissions: ScoreSubmission[]
+            }
 
 
-    package GoogleSheetsUpdater {
-        class GoogleSheetsAuthenticator {
-            -string[] scopes
-            +constructor()
-            +load() : Promise<void>
+            class ScoreSubmission {
+                +id: number
+                +submitter: string
+                +submittedOn: number
+                +playInstance: PlayInstance
+                +scores: Score[]
+            }
+
+            class SynthMap {
+                +id: number
+                +title: string
+                +artist: string
+                +mapper: string
+                +difficulty: string
+                +totalNotes: number
+                +totalSpecials: number
+                +hash: string
+                +playInstances: PlayInstance[]
+            }
+
+            class User {
+                +id: number
+            }
+
+            class Tournament {
+                +id: number
+                +state: enum<stopped|running|paused|done>
+                +tournamentType: number
+                +maxSongs: number
+                +stopRecordingAfterMax: bool
+            }
+
+            class TournamentType {
+                +id: number
+                +name: string
+                +displayName: string
+            }
+
+            class UserHasTournament {
+                +userId: number
+                +tournamentId: number
+                +isOwner: bool
+            }
+
+            class TournamentRound {
+                +id: number
+                +tournamentId: number
+                +roundName: string
+                +isActive: bool
+            }
+        }
+
+        package Listeners {
+            class GoogleSheetPlacementsListener {
+            }
+
+            class GoogleSheetRawDataListener {
+            }
+
+            class GoogleSheetRhythmMastersListener {
+            }
         }
     }
 

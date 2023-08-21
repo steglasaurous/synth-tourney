@@ -3,7 +3,8 @@ import { OnEvent } from '@nestjs/event-emitter';
 import { Logger } from '@nestjs/common';
 import { google } from 'googleapis';
 import * as fs from 'fs';
-
+// FIXME: Rename this class to something appropriate to what it does..  like playersWithScores or something to that effect.
+// FIXME: Move raw score data handling to its own listener to simplify this listener.
 export class GoogleSheetRhythmMastersListener {
   // FIXME: Move this into database at some point, once users and such get worked out.
   private spreadsheetId = '10xtMe3d4hrFrBNnSuy8pPRtuKjRoRF5cxSF2N9geDU8';
