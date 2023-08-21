@@ -1,85 +1,104 @@
 @startuml
-    package ScoreSubmissionModule {
-        class ScoreSubmissionController {
-            -scoreSubmissionService: ScoreSubmissionService
-            +create(createScoreSubmissionDto: CreateScoreSubmissionDto)
+    package AppModule {
+        package Controllers {
+            class AppController {
+                +start(): string
+            }
+
+            note as note1
+                AppController.start() launches the client app.
+            endnote
+        }
+    }
+    package UsersModule {
+        package Entities {
+            class User {
+                +id: number
+                +username: string
+                +displayName: string
+            }
+
+            class UserAuthSource {
+                +userId: number
+                +authSource: enum<steam|twitch|discord>
+                +authSourceUserId: string
+                +authSourceProfileData: json
+            }
+
+            UserAuthSource <-- User: 0..*
         }
 
-        class ScoreSubmissionService {
-            -synthMapRepository: Repository<SynthMap>
-            -playInstanceRepository: Repository<PlayInstance>
-            -scoreSubmissionRepository: Repository<ScoreSubmission>
-            -scoreRepository: Repository<Score>
-            -eventEmitter: EventEmitter2
-            +constructor()
-            +create(createScoreSubmissionDto: CreateScoreSubmissionDto): Promise<void>
-        }
-        ScoreSubmissionService <.. ScoreSubmissionController: uses
-        class ScoreSubmittedEvent {
-            +playInstance: PlayInstance
-            +scoreSubmission: ScoreSubmission
-            +scores: Score[]
+        package Services {
+            class UserService {
+                -userRepository: Repository<User>
+                +loginUser(authSource: string, authSourceUserId: string, profile: any): Promise<User>
+                +getUser(userId: number): User
+            }
+            note right of UserService
+                loginUser should add entry to UserAuthSource table,
+                replacing any previous auth source with the same user and authsource.
+            endnote
+
+            UserService ..> User: uses
         }
 
         package Dto {
-            class CreateScoreSubmissionDto {
+            class UserDto {
+                +userId: number
+                +displayName: string
             }
-            CreateScoreSubmissionDto <.. ScoreSubmissionService: consumes
-            CreateScoreSubmissionDto <.. ScoreSubmissionController: uses
         }
 
+        package Controllers {
+            class UserController {
+                -userService: UserService
+                +get(userId: number): UserDto
+                +put(userDto: UserDto)
+            }
+
+            UserController ..> UserDto: consumes
+            UserController ..> UserService: uses
+        }
+    }
+
+    package AuthModule {
+        package AuthStrategies {
+            class SteamAuthStrategy {
+                -userService: UserService
+                +constructor(authService: AuthService, steamApiKey: string)
+                +validate(identifier: string, profile: any, done: Function): Promise<void>
+            }
+
+            SteamAuthStrategy ..> UserService: uses
+        }
+
+        package Services {
+            class AuthService {
+                -jwtService: JwtService
+                +getJwt(user: any): string
+            }
+        }
+        package Controllers {
+            class AuthController {
+                +login(): string
+            }
+
+            class SteamAuthController {
+                -authService: AuthService
+                +authSteamStart()
+                +authSteamReturn()
+            }
+
+            SteamAuthController ..> AuthService: uses
+        }
+    }
+
+    package TournamentModule {
         package Entities {
-            class Score
-            {
-                +id: number
-                +scoreSubmission: ScoreSubmission
-                +playerName: string
-                +score: number
-                +perfectHits: number
-                +goodHits: number
-                +poorHits: number
-                +longestStreak: number
-                +maxMultiplier: number
-                +specialsHit: number
-            }
-
-            class PlayInstance {
-                +id: number
-                +synthMap: SynthMap
-                +timestamp: number
-                +roomName: string
-                +scoreSubmissions: ScoreSubmission[]
-            }
-
-
-            class ScoreSubmission {
-                +id: number
-                +submitter: string
-                +submittedOn: number
-                +playInstance: PlayInstance
-                +scores: Score[]
-            }
-
-            class SynthMap {
-                +id: number
-                +title: string
-                +artist: string
-                +mapper: string
-                +difficulty: string
-                +totalNotes: number
-                +totalSpecials: number
-                +hash: string
-                +playInstances: PlayInstance[]
-            }
-
-            class User {
-                +id: number
-            }
-
             class Tournament {
                 +id: number
                 +state: enum<stopped|running|paused|done>
-                +tournamentType: number
+                +tournamentTypeId: number
                 +maxSongs: number
                 +stopRecordingAfterMax: bool
             }
@@ -102,17 +121,149 @@
                 +roundName: string
                 +isActive: bool
             }
+            TournamentType --> Tournament: 0..*
+            User --> UserHasTournament: 0..*
+            UserHasTournament --> Tournament: 0..*
+            TournamentRound --> Tournament: 0..*
+        }
+    }
+
+    package ScoreSubmissionModule {
+        package Entities {
+            class Score
+            {
+                +id: number
+                +scoreSubmission: ScoreSubmission
+                +playerName: string
+                +score: number
+                +perfectHits: number
+                +goodHits: number
+                +poorHits: number
+                +longestStreak: number
+                +maxMultiplier: number
+                +specialsHit: number
+            }
+
+            class PlayInstance {
+                +id: number
+                +synthMap: SynthMap
+                +timestamp: number
+                +roomName: string
+                +tournamentId: number
+                +scoreSubmissions: ScoreSubmission[]
+            }
+
+            class ScoreSubmission {
+                +id: number
+                +userId: number
+                +submitter: string
+                +submittedOn: number
+                +playInstance: PlayInstance
+                +scores: Score[]
+            }
+
+            note right of ScoreSubmission
+                submitter is deprecated,
+                remove once userId can be relied upon.
+            endnote
+
+
+            class SynthMap {
+                +id: number
+                +title: string
+                +artist: string
+                +mapper: string
+                +difficulty: string
+                +totalNotes: number
+                +totalSpecials: number
+                +hash: string
+                +playInstances: PlayInstance[]
+            }
+            Score <-- ScoreSubmission: 0..*
+            PlayInstance --> ScoreSubmission: 0..*
+            SynthMap --> PlayInstance: 0..*
+            ScoreSubmission ..> User: 0..*
+
+            PlayInstance ..> Tournament: 0..*
         }
 
+        package Dto {
+            class CreateScoreSubmissionDto {
+                +submitterName: string
+                +roomName: string
+                +map: SynthMapDto
+                +scores: CreateScoreDto[]
+            }
+
+            class CreateScoreDto {
+                +playerName: string
+                +score: number
+                +perfectHits: number
+                +goodHits: number
+                +poorHits: number
+                +longestStreak: number
+                +maxMultiplier: number
+                +specialsHit: number
+            }
+
+            class SynthMapDto {
+                +title: string
+                +artist: string
+                +mapper: string
+                +difficulty: string
+                +totalNotes: number
+                +totalSpecials: number
+            }
+        }
+        class ScoreSubmittedEvent {
+            +playInstance: PlayInstance
+            +scoreSubmission: ScoreSubmission
+            +scores: Score[]
+        }
+        class ScoreSubmissionService {
+            -synthMapRepository: Repository<SynthMap>
+            -playInstanceRepository: Repository<PlayInstance>
+            -scoreSubmissionRepository: Repository<ScoreSubmission>
+            -scoreRepository: Repository<Score>
+            -eventEmitter: EventEmitter2
+            +constructor()
+            +create(createScoreSubmissionDto: CreateScoreSubmissionDto): Promise<void>
+        }
+        ScoreSubmissionService ..> ScoreSubmittedEvent: emits
+        class ScoreSubmissionController {
+            -scoreSubmissionService: ScoreSubmissionService
+            +create(createScoreSubmissionDto: CreateScoreSubmissionDto)
+        }
+
+        ScoreSubmissionService <.. ScoreSubmissionController: uses
+
+        CreateScoreSubmissionDto <.. ScoreSubmissionService: consumes
+        CreateScoreSubmissionDto <.. ScoreSubmissionController: uses
+        CreateScoreSubmissionDto ..> CreateScoreDto: uses
+        CreateScoreSubmissionDto ..> SynthMapDto: uses
+
         package Listeners {
-            class GoogleSheetPlacementsListener {
+            class GoogleSheetScoresListener {
+                -spreadsheetId: string
+                -spreadsheetTab: string
+                -playerNameRange: string
+                -placementsRange: string
+                -logger: Logger
+                -googleAuth: Google.Auth
+                -sheetsService: Google.SheetsService
+                +handle(event: ScoreSubmittedEvent): Promise<void>
             }
-
             class GoogleSheetRawDataListener {
+                -spreadsheetId: string
+                -spreadsheetTab: string
+                -logger: Logger
+                -googleAuth: Google.Auth
+                -sheetsService: Google.SheetsService
+                +handle(event: ScoreSubmittedEvent): Promise<void>
             }
 
-            class GoogleSheetRhythmMastersListener {
-            }
+            GoogleSheetScoresListener ..> ScoreSubmittedEvent: listens for
+            GoogleSheetRawDataListener ..> ScoreSubmittedEvent: listens for
         }
     }
 

@@ -1,3 +1,19 @@
-@startuml
-    Player -> Server:
+@startuml Login Flow
+    Browser --> AppController: GET
+    AppController --> Browser: Redirect /login
+    Browser --> AuthController: login()
+    AuthController --> Browser: Show login methods
+    Browser --> SteamAuthController: GET /auth/steam (authSteamStart())
+    SteamAuthController --> Browser: Redirect to steam
+    ...
+    Browser --> SteamAuthController: POST /auth/steam/return (authSteamReturn())
+    SteamAuthController --> Passport: Authenticate
+    Passport --> SteamAuthStrategy: validate()
+    SteamAuthStrategy --> Passport: User object
+    Passport --> SteamAuthController: User Object
+    SteamAuthController --> AuthService: getJwt(User)
+    AuthService --> SteamAuthController: jwt
+    SteamAuthController --> Browser: cookie JWT, redirect to /home
+    Browser --> AppController: GET
+    AppController --> Browser: Success
 @enduml
