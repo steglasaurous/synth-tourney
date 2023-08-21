@@ -1,17 +1,15 @@
 @startuml Future state
     entity User {
         * id : int <<generated>>
-    }
-
-    entity UserAuth {
-        * userAuthSourceId : int <<FK>>
-        * userId : int <<FK>>
-        * authInfo : json
+        * username : string
+        * displayName : string
     }
 
     entity UserAuthSource {
-        * id : int <<generated>>
-        * name : varchar
+        * userId : int <<FK>>
+        * authSource : enum<steam|twitch|discord>
+        * authSourceUserId : string
+        * authSourceProfileData : json
     }
 
     entity SynthMap {
