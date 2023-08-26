@@ -7,11 +7,11 @@ import * as fs from 'fs';
 // FIXME: Move raw score data handling to its own listener to simplify this listener.
 export class GoogleSheetRhythmMastersListener {
   // FIXME: Move this into database at some point, once users and such get worked out.
-  private spreadsheetId = '10xtMe3d4hrFrBNnSuy8pPRtuKjRoRF5cxSF2N9geDU8';
-  private spreadsheetRawScoresTab = "'Raw'";
-  private spreadsheetPlacementsTab = "'Week2'";
-  private playerNameRange = 'A9:A20';
-  private placementsRange = 'B9:W20';
+  private spreadsheetId = '1fXlVgQ993ca9_AdY8sPdnG2Boo74EHef4ePbsug8LvI';
+  private spreadsheetRawScoresTab = "'Raw Data'";
+  private spreadsheetPlacementsTab = "'Scores'";
+  private playerNameRange = 'A3:A30';
+  private placementsRange = 'B3:W20';
   private logger: Logger = new Logger(GoogleSheetRhythmMastersListener.name);
   private googleAuth;
   private sheetsService;
@@ -61,7 +61,13 @@ export class GoogleSheetRhythmMastersListener {
       },
     );
 
-    const playerList: any[] = playerListResponse.data.values;
+    let playerList: any[] = playerListResponse.data.values;
+    if (playerList == undefined) {
+      // Create a blank array entry so the rest of the code doesn't bork.
+      playerList = [];
+      playerList[0] = [];
+    }
+
     this.logger.debug('Current playerlist', { playerList: playerList });
 
     // Iterate through the scores and fill in the values at the appropriate locations
