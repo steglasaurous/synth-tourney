@@ -47,5 +47,9 @@ In short, see the scripts in package.json for the typeorm migration commands.
 - [ ] Handle cases of song 'bail-outs' (i.e. everyone aborts a song to start it again for some reason)
 - [ ] Add tournament tables
 - [ ] Add ability to enable/disable receiving score submissions
-- [ ] Implement Steam SSO
 - [ ] Implement remaining entities
+
+# Sign-on
+- [x] Implement Steam SSO
+- [x] Implement JWT generation
+

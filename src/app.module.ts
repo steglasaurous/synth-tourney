@@ -7,6 +7,7 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
 import { StartModule } from './start/start.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -16,12 +17,14 @@ import { AuthModule } from './auth/auth.module';
       database: 'synth-tourney.db',
       autoLoadEntities: true,
       migrations: [],
+      // logging: true, // Un-comment for query logging
     }),
     EventEmitterModule.forRoot(),
     AppModule,
     StartModule,
     UsersModule,
     AuthModule,
+    ConfigModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [AppService],

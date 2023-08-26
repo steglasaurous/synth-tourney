@@ -2,20 +2,25 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-steam';
 import { UserService } from '../../users/services/user.service';
 import { AuthSource } from '../../users/entities/user-auth-source.entity';
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
+import { BASE_URL, STEAM_APIKEY } from '../../injection-tokens';
 
 @Injectable()
 export class SteamAuthStrategy extends PassportStrategy(Strategy) {
-  constructor(private userService: UserService) {
+  constructor(
+    private userService: UserService,
+    @Inject(STEAM_APIKEY) steamApiKey: string,
+    @Inject(BASE_URL) baseUrl: string,
+  ) {
     super({
-      returnURL: 'http://localhost:3000/auth/steam/return',
-      realm: 'http://localhost:3000/',
-      apiKey: '', // FIXME: Put API key here from config.
+      returnURL: baseUrl + '/auth/steam/return',
+      realm: baseUrl,
+      apiKey: steamApiKey, // FIXME: Put API key here from config.
     });
   }
 
   // Called upon successful validation - we use this to 'register' this user with our db.
-  async validate(identifier: string, profile: any, done) {
+  async validate(identifier: string, profile: any) {
     console.log('identifier', identifier);
     console.log('profile', profile);
 

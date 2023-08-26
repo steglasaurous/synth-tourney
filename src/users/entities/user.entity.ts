@@ -5,7 +5,7 @@ import { UserAuthSource } from './user-auth-source.entity';
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
-  @Column()
+  @Column({ unique: true })
   username: string;
   @Column()
   displayName: string;

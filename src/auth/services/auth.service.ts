@@ -4,9 +4,14 @@ import { User } from '../../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
-  private jwtService: JwtService;
+  constructor(private jwtService: JwtService) {}
 
-  constructor() {}
-
-  getJwt(user: User) {}
+  getJwt(user: User) {
+    const payload = {
+      username: user.username,
+      displayName: user.displayName,
+      sub: user.id,
+    };
+    return this.jwtService.sign(payload);
+  }
 }

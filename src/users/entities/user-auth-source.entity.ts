@@ -1,4 +1,13 @@
-import { Column, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  JoinTable,
+  ManyToOne,
+  PrimaryColumn,
+  PrimaryGeneratedColumn,
+  Unique,
+} from 'typeorm';
 import { User } from './user.entity';
 
 export enum AuthSource {
@@ -6,18 +15,20 @@ export enum AuthSource {
 }
 
 @Entity()
+@Unique(['user', 'authSource'])
 export class UserAuthSource {
-  @PrimaryColumn({ type: 'int' })
-  @ManyToOne(() => User, (user) => user.userAuthSources)
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @ManyToOne(() => User, (user) => user.userAuthSources, { eager: true })
   user: User;
 
-  @PrimaryColumn()
   @Column({ type: 'varchar' })
   authSource: AuthSource;
 
   @Column()
   authSourceUserId: string;
 
-  @Column({ type: 'json' })
+  @Column({ type: 'simple-json', nullable: true })
   authSourceProfileData: object;
 }

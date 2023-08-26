@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { EntityManager, Repository } from 'typeorm';
 import { User } from '../entities/user.entity';
 import {
@@ -39,14 +39,13 @@ export class UserService {
     const newUser = new User();
     newUser.username = authSourceUsername;
     newUser.displayName = authSourceUsername;
+    const savedUser = await this.em.save(newUser);
 
-    await this.em.save(newUser);
     const newUserAuthSource = new UserAuthSource();
-    newUserAuthSource.user = newUser;
+    newUserAuthSource.user = savedUser;
     newUserAuthSource.authSource = authSource;
     newUserAuthSource.authSourceUserId = authSourceUserId;
     newUserAuthSource.authSourceProfileData = profileData;
-
     await this.em.save(newUserAuthSource);
 
     return newUser;
