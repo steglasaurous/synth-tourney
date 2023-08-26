@@ -37,3 +37,4 @@ lerna-debug.log*
 
 synth-tourney.db
 credentials.json
+.env

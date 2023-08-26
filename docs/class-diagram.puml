@@ -1,12 +1,12 @@
 @startuml
-    package AppModule {
+    package StartModule {
         package Controllers {
-            class AppController {
+            class StartController {
                 +start(): string
             }
 
             note as note1
-                AppController.start() launches the client app.
+                StartController.start() launches the client app.
             endnote
         }
     }
@@ -19,7 +19,7 @@
             }
 
             class UserAuthSource {
-                +userId: number
+                +user: User
                 +authSource: enum<steam|twitch|discord>
                 +authSourceUserId: string
                 +authSourceProfileData: json
@@ -32,7 +32,7 @@
             class UserService {
                 -userRepository: Repository<User>
                 +loginUser(authSource: string, authSourceUserId: string, profile: any): Promise<User>
-                +getUser(userId: number): User
+                +getUser(userId: number): Promise<User>
             }
             note right of UserService
                 loginUser should add entry to UserAuthSource table,

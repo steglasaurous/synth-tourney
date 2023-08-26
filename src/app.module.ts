@@ -4,6 +4,9 @@ import { AppService } from './app.service';
 import { ScoreSubmissionModule } from './score-submission/score-submission.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventEmitterModule } from '@nestjs/event-emitter';
+import { StartModule } from './start/start.module';
+import { UsersModule } from './users/users.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -15,6 +18,10 @@ import { EventEmitterModule } from '@nestjs/event-emitter';
       migrations: [],
     }),
     EventEmitterModule.forRoot(),
+    AppModule,
+    StartModule,
+    UsersModule,
+    AuthModule,
   ],
   controllers: [AppController],
   providers: [AppService],
