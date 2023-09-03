@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { ScoreSubmissionController } from './score-submission.controller';
-import { ScoreSubmissionService } from './score-submission.service';
+import { getGenericNestMock } from '../../test/test-helper';
 
 describe('ScoreSubmissionController', () => {
   let controller: ScoreSubmissionController;
@@ -8,10 +8,15 @@ describe('ScoreSubmissionController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ScoreSubmissionController],
-      providers: [ScoreSubmissionService],
-    }).compile();
+    })
+      .useMocker((token) => {
+        return getGenericNestMock(token);
+      })
+      .compile();
 
-    controller = module.get<ScoreSubmissionController>(ScoreSubmissionController);
+    controller = module.get<ScoreSubmissionController>(
+      ScoreSubmissionController,
+    );
   });
 
   it('should be defined', () => {

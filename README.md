@@ -35,13 +35,13 @@ In short, see the scripts in package.json for the typeorm migration commands.
 
 # Todo list
 
+- [ ] Write unit tests for all functionality to date
 - [ ] Update google sheet listener to have sheet name and tab names to be configurable
 - [x] Add condition to only push one submission to google sheet per play instance
 - [x] Update spreadsheet listener to match new spreadsheet layout
 - [ ] Think about how google sheets can fit into the broader picture
 - [ ] Update docker config and sqlite db location so it can be persisted in a docker volume (ex: in a var folder)
 - [ ] Replace "hello world" default controller with something useful.
-- [ ] Write unit tests for all functionality to date
 - [ ] Come up with a plan on how to track a tournament instance that spans multiple rooms
 - [ ] Determine how to handle repeats of the same song but in a different instance
 - [ ] Handle cases of song 'bail-outs' (i.e. everyone aborts a song to start it again for some reason)

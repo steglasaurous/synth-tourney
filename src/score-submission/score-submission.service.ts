@@ -50,22 +50,6 @@ export class ScoreSubmissionService {
     // Thinking a hash of all the player names in the room until I figure out
     // how to uniquely identify a MP room.
 
-    // const playerNames = createScoreSubmissionDto.scores
-    //   .map((score) => {
-    //     return score.playerName;
-    //   })
-    //   .sort((n1, n2) => {
-    //     if (n1 > n2) {
-    //       return 1;
-    //     }
-    //     if (n1 < n1) {
-    //       return -1;
-    //     }
-    //
-    //     return 0;
-    //   });
-
-    // const roomIdHash = crypto.createHash('sha256').update(playerNames.join('')).digest('hex');
     let playInstance = await this.playInstanceRepository.findOneBy({
       roomName: createScoreSubmissionDto.roomName,
       synthMap: synthMap,

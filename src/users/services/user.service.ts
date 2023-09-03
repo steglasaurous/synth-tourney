@@ -14,7 +14,6 @@ export class UserService {
     private userRepository: Repository<User>,
     @InjectRepository(UserAuthSource)
     private userAuthSource: Repository<UserAuthSource>,
-    private em: EntityManager,
   ) {}
 
   async loginUser(
@@ -29,7 +28,7 @@ export class UserService {
     if (existingUserAuthSource) {
       if (existingUserAuthSource.authSourceProfileData != profileData) {
         existingUserAuthSource.authSourceProfileData = profileData;
-        await this.em.save(existingUserAuthSource);
+        await this.userAuthSource.save(existingUserAuthSource);
       }
       return existingUserAuthSource.user;
     }
@@ -39,14 +38,14 @@ export class UserService {
     const newUser = new User();
     newUser.username = authSourceUsername;
     newUser.displayName = authSourceUsername;
-    const savedUser = await this.em.save(newUser);
+    const savedUser = await this.userRepository.save(newUser);
 
     const newUserAuthSource = new UserAuthSource();
     newUserAuthSource.user = savedUser;
     newUserAuthSource.authSource = authSource;
     newUserAuthSource.authSourceUserId = authSourceUserId;
     newUserAuthSource.authSourceProfileData = profileData;
-    await this.em.save(newUserAuthSource);
+    await this.userAuthSource.save(newUserAuthSource);
 
     return newUser;
   }
